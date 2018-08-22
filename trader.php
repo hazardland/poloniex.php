@@ -214,26 +214,34 @@ class trader
     {
         return @date("H:i:s");
     }
+    public function buy_rate_next ()
+    {
+        return self::number($this->from_balance/($this->to_balance_last*(1+$this->win_percent+$this->taker_fee)));
+    }
     //BUY XRP
     public function buy_log ($color)
     {
 echo
 \console\color(
 "[BUY ".$this->to_currency."] ".$this->time()."\n".
-"   Buy profitable by ",$color).\console\color(self::number($this->buy_amount_after()-($this->to_balance_last)),\console\GRAY)." ".\console\color($this->to_currency."\n".
-"   1 ".$this->to_currency.' = '.$this->buy_rate." ".$this->from_currency." >> ".self::number($this->from_balance/($this->to_balance_last*(1+$this->win_percent)))." ".$this->from_currency."\n".
-"   Rate needs to change by ", $color).\console\color(self::number($this->from_balance/($this->to_balance_last*(1+$this->win_percent))-$this->buy_rate),\console\RED).\console\color(" ".$this->from_currency."\n".
+"   Buy profitable by ",$color).\console\color(self::number($this->buy_amount_after()-$this->to_balance_last),\console\GRAY)." ".\console\color($this->to_currency."\n".
+"   1 ".$this->to_currency.' = '.$this->buy_rate." ".$this->from_currency." >> ".$this->buy_rate_next()." ".$this->from_currency."\n".
+"   Rate needs to change by ", $color).\console\color(self::number($this->buy_rate_next()-$this->buy_rate),\console\RED).\console\color(" ".$this->from_currency."\n".
 "   Balance ".$this->from_balance." ".$this->from_currency."\n".
 "   Next min profit ".self::number($this->to_balance_last*$this->win_percent)." ".$this->to_currency." ~".($this->win_percent*100)."%\n".
 "   Total profited ".self::number($this->from_balance-$this->from_balance_first)." ".$this->from_currency,$color)."\n";
 
     echo \console\progress (
-            " ".self::number($this->from_balance/($this->to_balance_last*(1+$this->win_percent)))."        ".self::number($this->buy_rate)."        ".$this->high_rate." ",
-            self::number($this->from_balance/($this->to_balance_last*(1+$this->win_percent))), //this is what rate we need to buy
-            self::number($this->buy_rate), //this is current rate
+            " ".$this->buy_rate_next()."        ".$this->buy_rate."        ".$this->high_rate." ",
+            $this->buy_rate_next(), //this is what rate we need to buy
+            $this->buy_rate, //this is current rate
             $this->high_rate
         )."\n";
 
+    }
+    public function sell_rate_next ()
+    {
+        return self::number (($this->from_balance_last*(1+$this->win_percent+$this->taker_fee))/$this->to_balance);
     }
     //SELL XRP
     public function sell_log ($color)
@@ -241,18 +249,18 @@ echo
 echo
 \console\color(
 "[SELL ".$this->to_currency."] ".$this->time()."\n".
-"   Sell profitable by ",$color).\console\color(self::number($this->sell_amount_after()-($this->from_balance_last)),\console\GRAY)." ".\console\color($this->from_currency."\n".
-"   1 ".$this->to_currency.' = '.$this->sell_rate." ".$this->from_currency.' >> '.self::number(($this->from_balance_last*(1+$this->win_percent))/$this->to_balance)." ".$this->from_currency."\n".
-"   Rate needs to change by ", $color).\console\color(self::number(($this->from_balance_last*(1+$this->win_percent))/$this->to_balance-$this->sell_rate),\console\RED).\console\color(" ".$this->from_currency."\n".
+"   Sell profitable by ",$color).\console\color(self::number($this->sell_amount_after()-$this->from_balance_last),\console\GRAY)." ".\console\color($this->from_currency."\n".
+"   1 ".$this->to_currency.' = '.$this->sell_rate." ".$this->from_currency.' >> '.$this->sell_rate_next()." ".$this->from_currency."\n".
+"   Rate needs to change by ", $color).\console\color(self::number($this->sell_rate_next()-$this->sell_rate),\console\RED).\console\color(" ".$this->from_currency."\n".
 "   Balance ".$this->to_balance." ".$this->to_currency."\n".
 "   Next min profit ".self::number($this->from_balance_last*$this->win_percent)." ".$this->from_currency." ~".($this->win_percent*100)."%\n".
 "   Total profited ".self::number($this->to_balance-$this->to_balance_first)." ".$this->to_currency,$color)."\n";
 
     echo \console\progress (
-            " ".$this->low_rate."        ".$this->sell_rate."        ".self::number(($this->from_balance_last*(1+$this->win_percent))/$this->to_balance)." ",
+            " ".$this->low_rate."        ".$this->sell_rate."        ".$this->sell_rate_next()." ",
             $this->low_rate,
             $this->sell_rate, //this is current rate
-            self::number(($this->from_balance_last*(1+$this->win_percent))/$this->to_balance) //this is what rate we need to sell
+            $this->sell_rate_next() //this is what rate we need to sell
         )."\n";
 
     }
