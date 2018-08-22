@@ -351,7 +351,7 @@ strpad("[SELL ".$this->to_currency."] ".$this->time(),38)."\n".
         if (is_array($result) && !isset($result['error']))
         {
             file_put_contents($this->to_currency_file(), $this->to_balance);
-            termux_notification
+            \termux\notification
             (
                 "SELL ".$this->to_balance." ".$this->to_currency,
                 "FOR ".$this->sell_amount()." ".$this->from_currency." AT ".$this->sell_rate." ".$this->from_currency,
