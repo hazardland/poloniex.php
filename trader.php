@@ -241,7 +241,7 @@ echo
 echo
 \console\color(
 "[SELL ".$this->to_currency."] ".$this->time()."\n".
-"   Sell not profitable by ",$color).\console\color(self::number($this->sell_amount_after()-($this->from_balance_last)),\console\GRAY)." ".\console\color($this->from_currency."\n".
+"   Sell profitable by ",$color).\console\color(self::number($this->sell_amount_after()-($this->from_balance_last)),\console\GRAY)." ".\console\color($this->from_currency."\n".
 "   1 ".$this->to_currency.' = '.$this->sell_rate." ".$this->from_currency.' >> '.self::number(($this->from_balance_last*(1+$this->win_percent))/$this->to_balance)." ".$this->from_currency."\n".
 "   Rate needs to change by ", $color).\console\color(self::number(($this->from_balance_last*(1+$this->win_percent))/$this->to_balance-$this->sell_rate),\console\RED).\console\color(" ".$this->from_currency."\n".
 "   Balance ".$this->to_balance." ".$this->to_currency."\n".
