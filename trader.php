@@ -227,11 +227,14 @@ str_pad("[BUY ".$this->to_currency."] ".$this->time(),38)."\n".
 "   Next min profit ".self::number($this->to_balance_last*$this->win_percent)." ".$this->to_currency." ~".($this->win_percent*100)."%\n".
 "   Total profited ".self::number($this->from_balance-$this->from_balance_first)." ".$this->from_currency,$color)."\n";
 
-    \console\progress (
-        self::number($this->from_balance/($this->to_balance_last*(1+$this->win_percent))), //this is what rate we need to buy
-        self::number($this->buy_rate), //this is current rate
-        $this->high_rate
-    );
+    echo
+        "   ".
+        \console\progress (
+            " ".self::number($this->from_balance/($this->to_balance_last*(1+$this->win_percent)))."    ".self::number($this->from_balance/($this->to_balance_last*(1+$this->win_percent)))."    ".self::number($this->buy_rate)." ",
+            self::number($this->from_balance/($this->to_balance_last*(1+$this->win_percent))), //this is what rate we need to buy
+            self::number($this->buy_rate), //this is current rate
+            $this->high_rate
+        )."\n";
 
     }
     //SELL XRP
@@ -247,11 +250,14 @@ strpad("[SELL ".$this->to_currency."] ".$this->time(),38)."\n".
 "   Next min profit ".self::number($this->from_balance_last*$this->win_percent)." ".$this->from_currency." ~".($this->win_percent*100)."%\n".
 "   Total profited ".self::number($this->to_balance-$this->to_balance_first)." ".$this->to_currency,$color)."\n";
 
-    \console\progress (
-        $this->low_rate,
-        $this->sell_rate, //this is current rate
-        self::number(($this->from_balance_last*(1+$this->win_percent))/$this->to_balance) //this is what rate we need to sell
-    );
+    echo
+        "   ".
+        \console\progress (
+            " ".$this->low_rate."    ".$this->sell_rate."    ".self::number(($this->from_balance_last*(1+$this->win_percent))/$this->to_balance)." ",
+            $this->low_rate,
+            $this->sell_rate, //this is current rate
+            self::number(($this->from_balance_last*(1+$this->win_percent))/$this->to_balance) //this is what rate we need to sell
+        )."\n";
 
     }
     public function buy_profitable()
