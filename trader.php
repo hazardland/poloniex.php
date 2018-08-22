@@ -230,7 +230,7 @@ str_pad("[BUY ".$this->to_currency."] ".$this->time(),38)."\n".
     echo
         "   ".
         \console\progress (
-            " ".self::number($this->from_balance/($this->to_balance_last*(1+$this->win_percent)))."    ".self::number($this->from_balance/($this->to_balance_last*(1+$this->win_percent)))."    ".self::number($this->buy_rate)." ",
+            " ".self::number($this->from_balance/($this->to_balance_last*(1+$this->win_percent)))."    ".self::number($this->buy_rate)."    ".self::number($this->buy_rate)." ",
             self::number($this->from_balance/($this->to_balance_last*(1+$this->win_percent))), //this is what rate we need to buy
             self::number($this->buy_rate), //this is current rate
             $this->high_rate
