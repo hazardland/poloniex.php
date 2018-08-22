@@ -219,7 +219,7 @@ class trader
     {
 echo
 \console\color(
-str_pad("[BUY ".$this->to_currency."] ".$this->time(),38)."\n".
+"[BUY ".$this->to_currency."] ".$this->time()."\n".
 "   Buy profitable by ",$color).\console\color(self::number($this->buy_amount_after()-($this->to_balance_last)),\console\GRAY)." ".\console\color($this->to_currency."\n".
 "   1 ".$this->to_currency.' = '.$this->buy_rate." ".$this->from_currency." >> ".self::number($this->from_balance/($this->to_balance_last*(1+$this->win_percent)))." ".$this->from_currency."\n".
 "   Rate needs to change by ", $color).\console\color(self::number($this->from_balance/($this->to_balance_last*(1+$this->win_percent))-$this->buy_rate),\console\RED).\console\color(" ".$this->from_currency."\n".
@@ -240,7 +240,7 @@ str_pad("[BUY ".$this->to_currency."] ".$this->time(),38)."\n".
     {
 echo
 \console\color(
-strpad("[SELL ".$this->to_currency."] ".$this->time(),38)."\n".
+"[SELL ".$this->to_currency."] ".$this->time()."\n".
 "   Sell not profitable by ",$color).\console\color(self::number($this->sell_amount_after()-($this->from_balance_last)),\console\GRAY)." ".\console\color($this->from_currency."\n".
 "   1 ".$this->to_currency.' = '.$this->sell_rate." ".$this->from_currency.' >> '.self::number(($this->from_balance_last*(1+$this->win_percent))/$this->to_balance)." ".$this->from_currency."\n".
 "   Rate needs to change by ", $color).\console\color(self::number(($this->from_balance_last*(1+$this->win_percent))/$this->to_balance-$this->sell_rate),\console\RED).\console\color(" ".$this->from_currency."\n".
