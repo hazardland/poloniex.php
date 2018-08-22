@@ -74,12 +74,12 @@ class trader
         list ($this->from_currency, $this->to_currency) = $this->extract_pair($params['pair']);
 
         /*
-            setup profile data folder
+            setup profile profile folder
         */
         $this->profile = $params['profile'];
-        if (!is_dir('./data/'.$this->profile))
+        if (!is_dir('./profile/'.$this->profile))
         {
-            mkdir('./data/'.$this->profile, 0777, true);
+            mkdir('./profile/'.$this->profile, 0777, true);
         }
 
         /*
@@ -172,11 +172,11 @@ class trader
     }
     public function from_currency_file ($type='last')
     {
-        return './data/'.$this->profile.'/'.strtolower($this->from_currency).'.'.$type;
+        return './profile/'.$this->profile.'/'.strtolower($this->from_currency).'.'.$type;
     }
     public function to_currency_file ($type='last')
     {
-        return './data/'.$this->profile.'/'.strtolower($this->to_currency).'.'.$type;
+        return './profile/'.$this->profile.'/'.strtolower($this->to_currency).'.'.$type;
     }
     public function pair ()
     {
