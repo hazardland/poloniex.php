@@ -77,9 +77,9 @@ class trader
             setup profile profile folder
         */
         $this->profile = $params['profile'];
-        if (!is_dir('./profile/'.$this->profile))
+        if (!is_dir($this->profile_dir()))
         {
-            mkdir('./profile/'.$this->profile, 0777, true);
+            mkdir($this->profile_dir(), 0777, true);
         }
 
         /*
@@ -170,13 +170,17 @@ class trader
         }
         return [$from,$to];
     }
+    public function profile_dir ()
+    {
+        return './profile/'.$this->profile;
+    }
     public function from_currency_file ($type='last')
     {
-        return './profile/'.$this->profile.'/'.strtolower($this->from_currency).'.'.$type;
+        return $this->profile_dir().'/'.strtolower($this->from_currency).'.'.$type;
     }
     public function to_currency_file ($type='last')
     {
-        return './profile/'.$this->profile.'/'.strtolower($this->to_currency).'.'.$type;
+        return $this->profile_dir().'/'.strtolower($this->to_currency).'.'.$type;
     }
     public function pair ()
     {
@@ -201,6 +205,7 @@ class trader
         {
             $this->sell();
         }
+        return true;
     }
     public function buy_amount ()
     {
@@ -293,6 +298,26 @@ echo
     {
         return self::number($this->sell_amount()*(1-$this->taker_fee));
     }
+    public function buy_log_file ()
+    {
+        file_put_contents($this->profile_dir().'/trade.log',
+            @date("Y-m-d H:i")." ".
+            "BUY  ".str_pad($this->buy_amount(),13,' ',STR_PAD_LEFT)." ".$this->to_currency." ".
+            "WITH ".str_pad($this->from_balance,13,' ',STR_PAD_LEFT)." ".$this->from_currency." ".
+            "AT ".$this->buy_rate." ".$this->from_currency."\n",
+            FILE_APPEND
+        );
+    }
+    public function sell_log_file ()
+    {
+        file_put_contents($this->profile_dir().'/trade.log',
+            @date("Y-m-d H:i")." ".
+            "SELL ".str_pad($this->to_balance,13,' ',STR_PAD_LEFT)." ".$this->to_currency." ".
+            "FOR  ".str_pad($this->sell_amount(),13,' ',STR_PAD_LEFT)." ".$this->from_currency." ".
+            "AT ".$this->sell_rate." ".$this->from_currency."\n",
+            FILE_APPEND
+        );
+    }
     public function buy ()
     {
         $result = null;
@@ -316,6 +341,7 @@ echo
         if (is_array($result) && !isset($result['error']))
         {
             file_put_contents($this->from_currency_file(), $this->from_balance);
+            $this->buy_log_file ();
             \termux\notification
             (
                 "BUY ".$this->buy_amount()." ".$this->to_currency,
@@ -361,6 +387,7 @@ echo
         if (is_array($result) && !isset($result['error']))
         {
             file_put_contents($this->to_currency_file(), $this->to_balance);
+            $this->sell_log_file ();
             \termux\notification
             (
                 "SELL ".$this->to_balance." ".$this->to_currency,
