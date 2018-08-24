@@ -8,7 +8,7 @@
     TODO: specify profit %
 */
 
-class trader
+class market
 {
     public $locked = false;
 
