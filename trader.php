@@ -12,7 +12,6 @@ class trader
 {
     public $locked = false;
 
-    public $profile;
     public $maker_fee;
     public $taker_fee;
     public $client;
@@ -49,7 +48,6 @@ class trader
     public function __construct ($params = [])
     {
         if (
-            !isset($params['profile']) ||
             !isset($params['pair']) ||
             !isset($params['win-percent']) ||
             !isset($params['poloniex-key']) ||
@@ -74,9 +72,8 @@ class trader
         list ($this->from_currency, $this->to_currency) = $this->extract_pair($params['pair']);
 
         /*
-            setup profile profile folder
+            create data dir if not exists
         */
-        $this->profile = $params['profile'];
         if (!is_dir($this->data_dir()))
         {
             mkdir($this->data_dir(), 0777, true);
@@ -172,7 +169,7 @@ class trader
     }
     public function data_dir ()
     {
-        return './profile/'.$this->profile;
+        return './data';
     }
     public function from_currency_file ($type='last')
     {
