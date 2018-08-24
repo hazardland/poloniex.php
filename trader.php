@@ -77,9 +77,9 @@ class trader
             setup profile profile folder
         */
         $this->profile = $params['profile'];
-        if (!is_dir($this->profile_dir()))
+        if (!is_dir($this->data_dir()))
         {
-            mkdir($this->profile_dir(), 0777, true);
+            mkdir($this->data_dir(), 0777, true);
         }
 
         /*
@@ -170,17 +170,17 @@ class trader
         }
         return [$from,$to];
     }
-    public function profile_dir ()
+    public function data_dir ()
     {
         return './profile/'.$this->profile;
     }
     public function from_currency_file ($type='last')
     {
-        return $this->profile_dir().'/'.strtolower($this->from_currency).'.'.$type;
+        return $this->data_dir().'/'.strtolower($this->from_currency).'.'.$type;
     }
     public function to_currency_file ($type='last')
     {
-        return $this->profile_dir().'/'.strtolower($this->to_currency).'.'.$type;
+        return $this->data_dir().'/'.strtolower($this->to_currency).'.'.$type;
     }
     public function pair ()
     {
@@ -300,7 +300,7 @@ echo
     }
     public function buy_log_file ()
     {
-        file_put_contents($this->profile_dir().'/trade.log',
+        file_put_contents($this->data_dir().'/trade.log',
             @date("Y-m-d H:i")." ".
             "BUY  ".str_pad($this->buy_amount(),13,' ',STR_PAD_LEFT)." ".$this->to_currency." ".
             "WITH ".str_pad($this->from_balance,13,' ',STR_PAD_LEFT)." ".$this->from_currency." ".
@@ -310,7 +310,7 @@ echo
     }
     public function sell_log_file ()
     {
-        file_put_contents($this->profile_dir().'/trade.log',
+        file_put_contents($this->data_dir().'/trade.log',
             @date("Y-m-d H:i")." ".
             "SELL ".str_pad($this->to_balance,13,' ',STR_PAD_LEFT)." ".$this->to_currency." ".
             "FOR  ".str_pad($this->sell_amount(),13,' ',STR_PAD_LEFT)." ".$this->from_currency." ".

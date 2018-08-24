@@ -4,20 +4,20 @@
 	// NOTE: currency pairs are reverse of what most exchanges use...
 	//       For instance, instead of XPM_BTC, use BTC_XPM
 
-	class poloniex 
+	class poloniex
 	{
 		protected $api_key;
 		protected $api_secret;
 		protected $trading_url = "https://poloniex.com/tradingApi";
 		protected $public_url = "https://poloniex.com/public";
 
-		public function __construct($api_key, $api_secret) 
+		public function __construct($api_key, $api_secret)
 		{
 			$this->api_key = $api_key;
 			$this->api_secret = $api_secret;
 		}
 
-		private function query (array $req = array()) 
+		private function query (array $req = array())
 		{
 			// API settings
 			$key = $this->api_key;
