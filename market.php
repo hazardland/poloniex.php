@@ -219,7 +219,7 @@ class market
             $this->log ('skip','refresh skip', \console\RED);
             return;
         }
-        $this->buy_log(\console\BLUE);
+        //$this->buy_log(\console\BLUE);
         if ($this->buy_amount()>=$this->to_min_trade && $this->buy_profitable())
         {
             if ($this->buy_rate_trend!==self::DOWN)
