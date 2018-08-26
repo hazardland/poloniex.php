@@ -36,9 +36,13 @@ class market
     public $to_min_trade;
 
     public $sell_rate;
+    public $sell_rate_last;
     public $buy_rate;
+    public $buy_rate_last;
     public $high_rate;
     public $low_rate;
+
+    public $rate_trend_round = 4;
 
     public $buy_amount;
     public $buy_amount_after;
@@ -94,6 +98,22 @@ class market
         $this->win_percent = floatval($params['win-percent'])/100;
 
         /*
+            setup from first balance
+        */
+        if (file_exists($this->from_currency_file('first')))
+        {
+            $result = trim(file_get_contents($this->from_currency_file('first')));
+            if ($result)
+            {
+                $this->from_balance_first = $result;
+            }
+        }
+        else if ($this->first_trade_currency==$this->from_currency)
+        {
+            $this->from_balance_first = $this->first_trade_amount;
+        }
+
+        /*
             setup from last balance
         */
         if (file_exists($this->from_currency_file('last')))
@@ -108,16 +128,21 @@ class market
         {
             $this->from_balance_last = $this->first_trade_amount;
         }
+
         /*
-            setup from first balance
+            setup to first balance
         */
-        if (file_exists($this->from_currency_file('first')))
+        if (file_exists($this->to_currency_file('first')))
         {
-            $result = trim(file_get_contents($this->from_currency_file('first')));
+            $result = trim(file_get_contents($this->to_currency_file('first')));
             if ($result)
             {
-                $this->from_balance_first = $result;
+                $this->to_balance_first = $result;
             }
+        }
+        else if ($this->first_trade_currency==$this->to_currency)
+        {
+            $this->to_balance_first = $this->first_trade_amount;
         }
 
         /*
@@ -136,17 +161,6 @@ class market
             $this->to_balance_last = $this->first_trade_amount;
         }
 
-        /*
-            setup to first balance
-        */
-        if (file_exists($this->to_currency_file('first')))
-        {
-            $result = trim(file_get_contents($this->to_currency_file('first')));
-            if ($result)
-            {
-                $this->to_balance_first = $result;
-            }
-        }
 
         //debug ($this);
         //exit;
@@ -185,9 +199,9 @@ class market
     {
         return $this->from_currency.'_'.$this->to_currency;
     }
-    public static function number ($amount)
+    public static function number ($amount, $decimals=8)
     {
-        return number_format ($amount, 8, '.', '');
+        return number_format ($amount, $decimals, '.', '');
     }
     public function trade ()
     {
@@ -204,6 +218,7 @@ class market
         {
             $this->sell();
         }
+        $this->sell_rate_trend_save();
         return true;
     }
     public function buy_amount ()
@@ -253,7 +268,7 @@ echo
 echo
 \console\color(
 "[SELL ".$this->to_currency."] ".$this->time()."\n".
-"   Sell profitable by ",$color).\console\color(self::number($this->sell_amount_after()-$this->from_balance_last),\console\GRAY)." ".\console\color($this->from_currency."\n".
+"   Sell profitable by ",$color).\console\color(self::number($this->sell_amount_after()-$this->from_balance_last),\console\GRAY)." ".\console\color($this->from_currency." ".$this->sell_rate_trend()."\n".
 "   1 ".$this->to_currency.' = '.$this->sell_rate." ".$this->from_currency.' >> '.$this->sell_rate_next()." ".$this->from_currency."\n".
 "   Rate needs to change by ", $color).\console\color(self::number($this->sell_rate_next()-$this->sell_rate),\console\RED).\console\color(" ".$this->from_currency."\n".
 "   Balance ".$this->to_balance." ".$this->to_currency."\n".
@@ -408,6 +423,31 @@ echo
             }
         }
     }
+    public function sell_rate_trend_save ()
+    {
+        $sell_rate = self::number ($this->sell_rate, $this->rate_trend_round);
+        if ($this->sell_rate_last===null || $this->sell_rate_last!=$sell_rate)
+        {
+            $this->sell_rate_last = $sell_rate;
+        }
+    }
+    public function sell_rate_trend ()
+    {
+        $sell_rate = self::number ($this->sell_rate, $this->rate_trend_round);
+        debug (['sell_rate_last'=>$this->$sell_rate_last,'sell_rate'=>$sell_rate]);
+        if ($this->sell_rate_last===null || $sell_rate==$this->sell_rate_last)
+        {
+            return "";
+        }
+        if ($sell_rate>$this->sell_rate_last)
+        {
+            return "UP";
+        }
+        else
+        {
+            return "DOWN";
+        }
+    }
     public function refresh()
     {
         static $debug = false;
@@ -419,7 +459,15 @@ echo
             $orders = '';
             foreach ($result as $order)
             {
-                $orders .= ' '.$order['type'].' '.$order['startingAmount'].' '.$this->to_currency.' rate '.$order['rate'].' '.$this->to_currency;
+                if (isset($order['type']))
+                {
+                    $orders .= ' '.$order['type'].' '.$order['startingAmount'].' '.$this->to_currency.' rate '.$order['rate'].' '.$this->to_currency;
+                }
+                else
+                {
+                    debug ($result);
+                    break;
+                }
             }
             $this->log ('skip','pending orders:'.$orders);
             return false;
