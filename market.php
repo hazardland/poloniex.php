@@ -10,6 +10,9 @@
 
 class market
 {
+    const UP = 1;
+    const DOWN = -1;
+
     public static $data_dir;
 
     public $locked = false;
@@ -36,9 +39,13 @@ class market
     public $to_min_trade;
 
     public $sell_rate;
-    public $sell_rate_last;
+    public $sell_rate_trend_last;
+    public $sell_rate_trend;
+
     public $buy_rate;
-    public $buy_rate_last;
+    public $buy_rate_trend_last;
+    public $buy_rate_trend;
+
     public $high_rate;
     public $low_rate;
 
@@ -218,7 +225,6 @@ class market
         {
             $this->sell();
         }
-        $this->sell_rate_trend_save();
         return true;
     }
     public function buy_amount ()
@@ -243,7 +249,7 @@ class market
 echo
 \console\color(
 "[BUY ".$this->to_currency."] ".$this->time()."\n".
-"   Buy profitable by ",$color).\console\color(self::number($this->buy_amount_after()-$this->to_balance_last),\console\GRAY)." ".\console\color($this->to_currency."\n".
+"   Buy profitable by ",$color).\console\color(self::number($this->buy_amount_after()-$this->to_balance_last),\console\GRAY)." ".\console\color($this->to_currency,$color)." ".\console\color($this->buy_rate_trend(),\console\WHITE).\console\color("\n".
 "   1 ".$this->to_currency.' = '.$this->buy_rate." ".$this->from_currency." >> ".$this->buy_rate_next()." ".$this->from_currency."\n".
 "   Rate needs to change by ", $color).\console\color(self::number($this->buy_rate_next()-$this->buy_rate),\console\RED).\console\color(" ".$this->from_currency."\n".
 "   Balance ".$this->from_balance." ".$this->from_currency."\n".
@@ -268,7 +274,7 @@ echo
 echo
 \console\color(
 "[SELL ".$this->to_currency."] ".$this->time()."\n".
-"   Sell profitable by ",$color).\console\color(self::number($this->sell_amount_after()-$this->from_balance_last),\console\GRAY)." ".\console\color($this->from_currency." ".$this->sell_rate_trend()."\n".
+"   Sell profitable by ",$color).\console\color(self::number($this->sell_amount_after()-$this->from_balance_last),\console\GRAY)." ".\console\color($this->from_currency,$color)." ".\console\color($this->sell_rate_trend(),\console\WHITE).\console\color("\n".
 "   1 ".$this->to_currency.' = '.$this->sell_rate." ".$this->from_currency.' >> '.$this->sell_rate_next()." ".$this->from_currency."\n".
 "   Rate needs to change by ", $color).\console\color(self::number($this->sell_rate_next()-$this->sell_rate),\console\RED).\console\color(" ".$this->from_currency."\n".
 "   Balance ".$this->to_balance." ".$this->to_currency."\n".
@@ -426,27 +432,66 @@ echo
     public function sell_rate_trend_save ()
     {
         $sell_rate = self::number ($this->sell_rate, $this->rate_trend_round);
-        if ($this->sell_rate_last===null || $this->sell_rate_last!=$sell_rate)
+        if ($this->sell_rate_trend_last===null)
         {
-            $this->sell_rate_last = $sell_rate;
+            $this->sell_rate_trend_last = $sell_rate;
+        }
+        if ($this->sell_rate_trend_last!=$sell_rate)
+        {
+            if ($sell_rate>$this->sell_rate_trend_last)
+            {
+                $this->sell_rate_trend = self::UP;
+            }
+            else
+            {
+                $this->sell_rate_trend = self::DOWN;
+            }
+            $this->sell_rate_trend_last = $sell_rate;
         }
     }
     public function sell_rate_trend ()
     {
-        $sell_rate = self::number ($this->sell_rate, $this->rate_trend_round);
-        debug (['sell_rate_last'=>$this->$sell_rate_last,'sell_rate'=>$sell_rate]);
-        if ($this->sell_rate_last===null || $sell_rate==$this->sell_rate_last)
-        {
-            return "";
-        }
-        if ($sell_rate>$this->sell_rate_last)
+        if ($this->sell_rate_trend==self::UP)
         {
             return "UP";
         }
-        else
+        else if ($this->sell_rate_trend==self::DOWN)
         {
             return "DOWN";
         }
+        return "";
+    }
+    public function buy_rate_trend_save ()
+    {
+        $buy_rate = self::number ($this->buy_rate, $this->rate_trend_round);
+        if ($this->buy_rate_trend_last===null)
+        {
+            $this->buy_rate_trend_last = $buy_rate;
+        }
+        if ($this->buy_rate_trend_last!=$buy_rate)
+        {
+            if ($buy_rate>$this->buy_rate_trend_last)
+            {
+                $this->buy_rate_trend = self::UP;
+            }
+            else
+            {
+                $this->buy_rate_trend = self::DOWN;
+            }
+            $this->buy_rate_trend_last = $buy_rate;
+        }
+    }
+    public function buy_rate_trend ()
+    {
+        if ($this->buy_rate_trend==self::UP)
+        {
+            return "UP";
+        }
+        else if ($this->buy_rate_trend==self::DOWN)
+        {
+            return "DOWN";
+        }
+        return "";
     }
     public function refresh()
     {
@@ -500,7 +545,7 @@ echo
 
         #fees
         $result = $this->client->get_fee_info();
-        if (!$result)
+        if (!$result || !isset($result['makerFee']) || !isset($result['takerFee']))
         {
             $this->log ('skip','error retrieving fees');
             return false;
@@ -524,6 +569,9 @@ echo
         $this->sell_rate = $result['highestBid'];
         $this->high_rate = $result['high24hr'];
         $this->low_rate = $result['low24hr'];
+
+        $this->buy_rate_trend_save();
+        $this->sell_rate_trend_save();
 
         if ($this->from_balance>0.0000001 && !$this->from_balance_first)
         {
