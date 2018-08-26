@@ -412,8 +412,14 @@ echo
         $result = $this->client->get_open_orders ($this->pair());
         if ($result)
         {
+            //debug ($result);
             $this->locked = true;
-            $this->log ('skip','pending order');
+            $orders = '';
+            foreach ($result as $order)
+            {
+                $orders .= ' '.$order['type'].' '.$order['startingAmount'].' '.$this->to_currency.' rate '.$order['rate'].' '.$this->to_currency;
+            }
+            $this->log ('skip','pending orders:'.$orders);
             return false;
         }
         else
