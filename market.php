@@ -196,11 +196,11 @@ class market
         }
         if ($this->buy_amount()>=$this->to_min_trade && $this->buy_profitable())
         {
-            $this->buy();
+            //$this->buy();
         }
         else if ($this->sell_amount()>=$this->from_min_trade && $this->sell_profitable())
         {
-            $this->sell();
+            //$this->sell();
         }
         return true;
     }
