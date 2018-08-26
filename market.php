@@ -10,6 +10,8 @@
 
 class market
 {
+    public static $data_dir;
+
     public $locked = false;
 
     public $maker_fee;
@@ -169,7 +171,7 @@ class market
     }
     public function data_dir ()
     {
-        return './data';
+        return self::$data_dir;
     }
     public function from_currency_file ($type='last')
     {
