@@ -40,10 +40,12 @@ class market
 
     public $sell_rate;
     public $sell_rate_trend_last;
+    public $sell_rate_trend_changed = false;
     public $sell_rate_trend;
 
     public $buy_rate;
     public $buy_rate_trend_last;
+    public $buy_rate_trend_changed = false;
     public $buy_rate_trend;
 
     public $high_rate;
@@ -217,12 +219,15 @@ class market
             $this->log ('skip','refresh skip', \console\RED);
             return;
         }
+        $this->buy_log(\console\BLUE);
         if ($this->buy_amount()>=$this->to_min_trade && $this->buy_profitable())
         {
+            if ($this->buy_rate_trend!==self::DOWN)
             $this->buy();
         }
         else if ($this->sell_amount()>=$this->from_min_trade && $this->sell_profitable())
         {
+            if ($this->sell_rate_trend!==self::UP)
             $this->sell();
         }
         return true;
@@ -249,7 +254,7 @@ class market
 echo
 \console\color(
 "[BUY ".$this->to_currency."] ".$this->time()."\n".
-"   Buy profitable by ",$color).\console\color(self::number($this->buy_amount_after()-$this->to_balance_last),\console\GRAY)." ".\console\color($this->to_currency,$color)." ".\console\color($this->buy_rate_trend(),\console\WHITE).\console\color("\n".
+"   Buy profitable by ",$color).\console\color(self::number($this->buy_amount_after()-$this->to_balance_last),\console\GRAY)." ".\console\color($this->to_currency,$color)." ".\console\color($this->buy_rate_trend(),$this->sell_rate_trend_changed?\console\WHITE:$color).\console\color("\n".
 "   1 ".$this->to_currency.' = '.$this->buy_rate." ".$this->from_currency." >> ".$this->buy_rate_next()." ".$this->from_currency."\n".
 "   Rate needs to change by ", $color).\console\color(self::number($this->buy_rate_next()-$this->buy_rate),\console\RED).\console\color(" ".$this->from_currency."\n".
 "   Balance ".$this->from_balance." ".$this->from_currency."\n".
@@ -274,7 +279,7 @@ echo
 echo
 \console\color(
 "[SELL ".$this->to_currency."] ".$this->time()."\n".
-"   Sell profitable by ",$color).\console\color(self::number($this->sell_amount_after()-$this->from_balance_last),\console\GRAY)." ".\console\color($this->from_currency,$color)." ".\console\color($this->sell_rate_trend(),\console\WHITE).\console\color("\n".
+"   Sell profitable by ",$color).\console\color(self::number($this->sell_amount_after()-$this->from_balance_last),\console\GRAY)." ".\console\color($this->from_currency,$color)." ".\console\color($this->sell_rate_trend(),$this->sell_rate_trend_changed?\console\WHITE:$color).\console\color("\n".
 "   1 ".$this->to_currency.' = '.$this->sell_rate." ".$this->from_currency.' >> '.$this->sell_rate_next()." ".$this->from_currency."\n".
 "   Rate needs to change by ", $color).\console\color(self::number($this->sell_rate_next()-$this->sell_rate),\console\RED).\console\color(" ".$this->from_currency."\n".
 "   Balance ".$this->to_balance." ".$this->to_currency."\n".
@@ -436,6 +441,7 @@ echo
         {
             $this->sell_rate_trend_last = $sell_rate;
         }
+        $this->sell_rate_trend_changed = false;
         if ($this->sell_rate_trend_last!=$sell_rate)
         {
             if ($sell_rate>$this->sell_rate_trend_last)
@@ -446,6 +452,7 @@ echo
             {
                 $this->sell_rate_trend = self::DOWN;
             }
+            $this->sell_rate_trend_changed = true;
             $this->sell_rate_trend_last = $sell_rate;
         }
     }
@@ -468,6 +475,7 @@ echo
         {
             $this->buy_rate_trend_last = $buy_rate;
         }
+        $this->buy_rate_trend_changed = false;
         if ($this->buy_rate_trend_last!=$buy_rate)
         {
             if ($buy_rate>$this->buy_rate_trend_last)
@@ -478,6 +486,7 @@ echo
             {
                 $this->buy_rate_trend = self::DOWN;
             }
+            $this->buy_rate_trend_changed = true;
             $this->buy_rate_trend_last = $buy_rate;
         }
     }
