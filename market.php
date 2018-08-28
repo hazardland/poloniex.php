@@ -276,7 +276,7 @@ echo
 "   Total profited ".self::number($this->from_balance-$this->from_balance_first)." ".$this->from_currency,$color)."\n";
 
     echo \console\progress (
-            " ".str_pad("B ".$this->buy_rate_next(),16)." ".str_pad("C ".$this->buy_rate,16,' ',STR_PAD_LEFT)." ".str_pad("H ".$this->high_rate,16,' ',STR_PAD_LEFT)." ",
+            str_pad("B ".$this->buy_rate_next(),16)." ".str_pad("C ".$this->buy_rate,16,' ',STR_PAD_LEFT)." ".str_pad("H ".$this->high_rate,16,' ',STR_PAD_LEFT),
             $this->buy_rate_next(), //this is what rate we need to buy
             $this->buy_rate, //this is current rate
             $this->high_rate
