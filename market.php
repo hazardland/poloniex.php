@@ -59,7 +59,7 @@ class market
     public $sell_amount;
     public $sell_amount_after;
 
-    private static $min_trades = ['XRP'=>1,'USDT'=>1,'ETC'=>1,'BTC'=>0.0001];
+    private static $min_trades = ['XRP'=>1,'USDT'=>1,'ETC'=>1,'BTC'=>0.0001,'DASH'=>0.1];
 
     public function __construct ($params = [])
     {
