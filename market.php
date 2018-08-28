@@ -88,6 +88,17 @@ class market
         }
         list ($this->from_currency, $this->to_currency) = $this->extract_pair($params['pair']);
 
+        if (!isset(self::$min_trades[$this->from_currency]))
+        {
+            $this->log ('error', 'No min trade amount defined for '.$this->from_currency);
+            exit;
+        }
+        if (!isset(self::$min_trades[$this->to_currency]))
+        {
+            $this->log ('error', 'No min trade amount defined for '.$this->to_currency);
+            exit;
+        }
+
         /*
             create data dir if not exists
         */
@@ -265,7 +276,7 @@ echo
 "   Total profited ".self::number($this->from_balance-$this->from_balance_first)." ".$this->from_currency,$color)."\n";
 
     echo \console\progress (
-            "-B-".$this->buy_rate_next()."----C-".$this->buy_rate."----H-".$this->high_rate."---",
+            " ".str_pad("B ".$this->buy_rate_next(),16)." ".str_pad("C ".$this->buy_rate,16,' ',STR_PAD_LEFT)." ".str_pad("H ".$this->high_rate,16,' ',STR_PAD_LEFT)." ",
             $this->buy_rate_next(), //this is what rate we need to buy
             $this->buy_rate, //this is current rate
             $this->high_rate
@@ -290,7 +301,7 @@ echo
 "   Total profited ".self::number($this->to_balance-$this->to_balance_first)." ".$this->to_currency,$color)."\n";
 
     echo \console\progress (
-            "-L-".$this->low_rate."----C-".$this->sell_rate."----S-".$this->sell_rate_next()."---",
+            " ".strp_pad("L ".$this->low_rate,16)." ".strpad($this->sell_rate,16,' ',STR_PAD_LEFT)." ".str_pad("S ".$this->sell_rate_next(),16,' ',STR_PAD_LEFT)." ",
             $this->low_rate,
             $this->sell_rate, //this is current rate
             $this->sell_rate_next() //this is what rate we need to sell
