@@ -24,7 +24,8 @@ class market
     public $first_trade_currency;
     public $first_trade_amount;
 
-    public $win_percent;
+    public $sell_win_percent;
+    public $buy_win_percent;
 
     public $from_currency;
     public $from_balance_first = 0;
@@ -64,7 +65,8 @@ class market
     {
         if (
             !isset($params['pair']) ||
-            !isset($params['win-percent']) ||
+            !isset($params['sell-win-percent']) ||
+            !isset($params['buy-win-percent']) ||
             !isset($params['poloniex-key']) ||
             !isset($params['poloniex-secret']) ||
             !isset($params['first-trade-currency']) ||
@@ -104,7 +106,8 @@ class market
         $this->from_min_trade = self::$min_trades [$this->to_currency];
         $this->to_min_trade = self::$min_trades[$this->to_currency];
 
-        $this->win_percent = floatval($params['win-percent'])/100;
+        $this->sell_win_percent = floatval($params['sell-win-percent'])/100;
+        $this->buy_win_percent = floatval($params['buy-win-percent'])/100;
 
         /*
             setup from first balance
@@ -246,7 +249,7 @@ class market
     }
     public function buy_rate_next ()
     {
-        return self::number($this->from_balance/($this->to_balance_last*(1+$this->win_percent+$this->taker_fee)));
+        return self::number($this->from_balance/($this->to_balance_last*(1+$this->buy_win_percent+$this->taker_fee)));
     }
     //BUY XRP
     public function buy_log ($color)
@@ -258,7 +261,7 @@ echo
 "   1 ".$this->to_currency.' = '.$this->buy_rate." ".$this->from_currency." >> ".$this->buy_rate_next()." ".$this->from_currency."\n".
 "   Rate needs to change by ", $color).\console\color(self::number($this->buy_rate_next()-$this->buy_rate),\console\RED).\console\color(" ".$this->from_currency."\n".
 "   Balance ".$this->from_balance." ".$this->from_currency."\n".
-"   Next min profit ".self::number($this->to_balance_last*$this->win_percent)." ".$this->to_currency." ~".($this->win_percent*100)."%\n".
+"   Next min profit ".self::number($this->to_balance_last*$this->buy_win_percent)." ".$this->to_currency." ~".($this->buy_win_percent*100)."%\n".
 "   Total profited ".self::number($this->from_balance-$this->from_balance_first)." ".$this->from_currency,$color)."\n";
 
     echo \console\progress (
@@ -271,7 +274,7 @@ echo
     }
     public function sell_rate_next ()
     {
-        return self::number (($this->from_balance_last*(1+$this->win_percent+$this->taker_fee))/$this->to_balance);
+        return self::number (($this->from_balance_last*(1+$this->sell_win_percent+$this->taker_fee))/$this->to_balance);
     }
     //SELL XRP
     public function sell_log ($color)
@@ -283,7 +286,7 @@ echo
 "   1 ".$this->to_currency.' = '.$this->sell_rate." ".$this->from_currency.' >> '.$this->sell_rate_next()." ".$this->from_currency."\n".
 "   Rate needs to change by ", $color).\console\color(self::number($this->sell_rate_next()-$this->sell_rate),\console\RED).\console\color(" ".$this->from_currency."\n".
 "   Balance ".$this->to_balance." ".$this->to_currency."\n".
-"   Next min profit ".self::number($this->from_balance_last*$this->win_percent)." ".$this->from_currency." ~".($this->win_percent*100)."%\n".
+"   Next min profit ".self::number($this->from_balance_last*$this->sell_win_percent)." ".$this->from_currency." ~".($this->sell_win_percent*100)."%\n".
 "   Total profited ".self::number($this->to_balance-$this->to_balance_first)." ".$this->to_currency,$color)."\n";
 
     echo \console\progress (
@@ -296,7 +299,7 @@ echo
     }
     public function buy_profitable()
     {
-        if ($this->buy_amount_after()>=($this->to_balance_last*(1+$this->win_percent)))
+        if ($this->buy_amount_after()>=($this->to_balance_last*(1+$this->buy_win_percent)))
         {
             $this->buy_log (\console\GREEN);
             return true;
@@ -306,7 +309,7 @@ echo
     }
     public function sell_profitable()
     {
-        if ($this->sell_amount_after()>=($this->from_balance_last*(1+$this->win_percent)))
+        if ($this->sell_amount_after()>=($this->from_balance_last*(1+$this->sell_win_percent)))
         {
             $this->sell_log (\console\GREEN);
             return true;
