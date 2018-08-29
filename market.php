@@ -519,23 +519,26 @@ echo
     public function refresh()
     {
         static $debug = false;
+
+        #################################################################
+        # ORDERS
+
         $result = $this->client->get_open_orders ($this->pair());
+        if (is_array($result) && isset($result['error']))
+        {
+            $this->log ('error', isset($result['error'])?$result['error']:'Error retrieving orders', \console\RED);
+            return false;
+        }
+
+        //---------------------------------------------------------------
+
         if ($result)
         {
-            //debug ($result);
             $this->locked = true;
             $orders = '';
             foreach ($result as $order)
             {
-                if (isset($order['type']))
-                {
-                    $orders .= ' '.$order['type'].' '.$order['startingAmount'].' '.$this->to_currency.' rate '.$order['rate'].' '.$this->to_currency;
-                }
-                else
-                {
-                    debug ($result);
-                    break;
-                }
+                $orders .= ' '.$order['type'].' '.$order['startingAmount'].' '.$this->to_currency.' rate '.$order['rate'].' '.$this->to_currency;
             }
             $this->log ('skip','pending orders:'.$orders);
             return false;
@@ -545,53 +548,81 @@ echo
             $this->locked = false;
         }
 
-        #balances
+        #################################################################
+        # BALANCES
+
         $result = $this->client->get_balances();
-        if (!$result || !isset($result[$this->from_currency]) || !isset($result[$this->to_currency]))
+        if (!is_array($result) || (is_array($result) && isset($result['error'])))
         {
-            $this->log ('skip','error retrieving balances');
+            $this->log ('error', isset($result['error'])?$result['error']:'Error retrieving balances', \console\RED);
             return false;
         }
+
+        //---------------------------------------------------------------
+
+        if (!isset($result[$this->from_currency]) || !isset($result[$this->to_currency]))
+        {
+            $this->log ('error','Balances not found');
+            return false;
+        }
+
+        //---------------------------------------------------------------
+
         $this->from_balance = $result[$this->from_currency];
         $this->to_balance = $result[$this->to_currency];
 
+        //---------------------------------------------------------------
+
         if ($this->from_balance>0.0000001 && $this->to_balance_last==0)
         {
-            $this->log ('error','you have not set how much '.$this->to_currency.' you have to buy in your first trade',\console\RED);
+            $this->log ('error','You have not set how much '.$this->to_currency.' you have to buy in your first trade',\console\RED);
             exit;
         }
         if ($this->to_balance>0.0000001 && $this->from_balance_last==0)
         {
-            $this->log ('error','you have not for how much '.$this->from_currency.' you have to sell in your first trade',\console\RED);
+            $this->log ('error','You have not for how much '.$this->from_currency.' you have to sell in your first trade',\console\RED);
             exit;
         }
 
-        #fees
+        #################################################################
+        # BALANCES
+
         $result = $this->client->get_fee_info();
-        if (!$result || !isset($result['makerFee']) || !isset($result['takerFee']))
+        if (!is_array($result) || (is_array($result) && isset($result['error'])))
         {
-            $this->log ('skip','error retrieving fees');
+            $this->log ('error', isset($result['error'])?$result['error']:'Error retrieving fees', \console\RED);
             return false;
         }
+
+        //---------------------------------------------------------------
+
         $this->maker_fee = $result['makerFee'];
         $this->taker_fee = $result['takerFee'];
+
+        //---------------------------------------------------------------
+
         if (!$this->maker_fee || !$this->taker_fee)
         {
             $this->log ('skip','error retrieving fees');
             return false;
         }
 
-        #rates
+        #################################################################
+        # RATES
         $result = $this->client->get_ticker ($this->pair());
-        if (!$result)
+        if (!is_array($result) || (is_array($result) && isset($result['error'])))
         {
-            $this->log ('skip','error retrieving rates');
+            $this->log ('error', isset($result['error'])?$result['error']:'Error retrieving rates', \console\RED);
             return false;
         }
+        //---------------------------------------------------------------
+
         $this->buy_rate = $result['lowestAsk'];
         $this->sell_rate = $result['highestBid'];
         $this->high_rate = $result['high24hr'];
         $this->low_rate = $result['low24hr'];
+
+        //---------------------------------------------------------------
 
         $this->buy_rate_trend_save();
         $this->sell_rate_trend_save();
@@ -607,7 +638,9 @@ echo
             $this->to_balance_first = $this->to_balance;
         }
 
-        #stats
+        #################################################################
+        #STATS
+
         $this->buy_amount = $this->buy_amount();
         $this->buy_amount_after = $this->buy_amount_after();
         $this->sell_amount = $this->sell_amount();
