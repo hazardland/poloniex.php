@@ -106,7 +106,10 @@ class market
         {
             mkdir($this->data_dir(), 0777, true);
         }
-
+        if (!is_dir($this->data_dir('log')))
+        {
+            mkdir($this->data_dir('log'), 0777, true);
+        }
         /*
             first trade amount will be set as [from/to]_balance_last
             if not found in file
@@ -206,17 +209,21 @@ class market
         }
         return [$from,$to];
     }
-    public function data_dir ()
+    public function data_dir ($path='')
     {
-        return self::$data_dir;
+        if ($path)
+        {
+            $path = '/'.$path;
+        }
+        return self::$data_dir.$path;
     }
-    public function from_currency_file ($type='last')
+    public function from_currency_file ($type)
     {
-        return $this->data_dir().'/'.strtolower($this->from_currency).'.'.$type;
+        return $this->data_dir(strtolower($this->from_currency).'.'.$type);
     }
-    public function to_currency_file ($type='last')
+    public function to_currency_file ($type)
     {
-        return $this->data_dir().'/'.strtolower($this->to_currency).'.'.$type;
+        return $this->data_dir(strtolower($this->to_currency).'.'.$type);
     }
     public function pair ()
     {
@@ -256,7 +263,7 @@ class market
     }
     public function time ()
     {
-        return @date("H:i:s");
+        return @date("Y-m-d H:i:s");
     }
     public function buy_rate_next ()
     {
@@ -339,7 +346,7 @@ echo
     }
     public function buy_log_file ()
     {
-        file_put_contents($this->data_dir().'/trade.log',
+        file_put_contents($this->data_dir('trade.log'),
             @date("Y-m-d H:i")." ".
             "BUY  ".str_pad($this->buy_amount(),13,' ',STR_PAD_LEFT)." ".$this->to_currency." ".
             "WITH ".str_pad($this->from_balance,13,' ',STR_PAD_LEFT)." ".$this->from_currency." ".
@@ -349,7 +356,7 @@ echo
     }
     public function sell_log_file ()
     {
-        file_put_contents($this->data_dir().'/trade.log',
+        file_put_contents($this->data_dir('trade.log'),
             @date("Y-m-d H:i")." ".
             "SELL ".str_pad($this->to_balance,13,' ',STR_PAD_LEFT)." ".$this->to_currency." ".
             "FOR  ".str_pad($this->sell_amount(),13,' ',STR_PAD_LEFT)." ".$this->from_currency." ".
@@ -370,16 +377,16 @@ echo
                 \console\YELLOW
             );
             $result = $this->client->buy ($this->pair(), $this->buy_rate, $this->buy_amount());
-            //debug ($result,'buy result');
+            debug ($result,$this->time(),$this->data_dir('log/buy'));
         }
         else
         {
-            $this->log ("buy", "not buying no minimum trade criteria met", \console\RED);
+            $this->log ("buy", "Not buying no minimum trade criteria met", \console\RED);
         }
 
         if (is_array($result) && !isset($result['error']))
         {
-            file_put_contents($this->from_currency_file(), $this->from_balance);
+            file_put_contents($this->from_currency_file('last'), $this->from_balance);
             $this->buy_log_file ();
             \termux\notification
             (
@@ -416,16 +423,16 @@ echo
                 \console\YELLOW
             );
             $result = $this->client->sell ($this->pair(), $this->sell_rate, $this->to_balance);
-            //debug ($result,'sell result');
+            debug ($result,$this->time(),$this->data_dir('log/sell'));
         }
         else
         {
-            $this->log ("sell", "not selling no minimum trade criteria met", \console\RED);
+            $this->log ("sell", "Not selling no minimum trade criteria met", \console\RED);
         }
 
         if (is_array($result) && !isset($result['error']))
         {
-            file_put_contents($this->to_currency_file(), $this->to_balance);
+            file_put_contents($this->to_currency_file('last'), $this->to_balance);
             $this->sell_log_file ();
             \termux\notification
             (
@@ -534,6 +541,7 @@ echo
 
         if ($result)
         {
+            debug ($result,$this->time(),$this->data_dir('log/get_open_orders'));
             $this->locked = true;
             $orders = '';
             foreach ($result as $order)
@@ -557,6 +565,8 @@ echo
             $this->log ('error', isset($result['error'])?$result['error']:'Error retrieving balances', \console\RED);
             return false;
         }
+        debug ($result,$this->time(),$this->data_dir('log/get_balances'));
+
 
         //---------------------------------------------------------------
 
@@ -585,7 +595,7 @@ echo
         }
 
         #################################################################
-        # BALANCES
+        # FEES
 
         $result = $this->client->get_fee_info();
         if (!is_array($result) || (is_array($result) && isset($result['error'])))
@@ -593,6 +603,8 @@ echo
             $this->log ('error', isset($result['error'])?$result['error']:'Error retrieving fees', \console\RED);
             return false;
         }
+        debug ($result,$this->time(),$this->data_dir('log/get_fee_info'));
+
 
         //---------------------------------------------------------------
 
@@ -615,6 +627,8 @@ echo
             $this->log ('error', isset($result['error'])?$result['error']:'Error retrieving rates', \console\RED);
             return false;
         }
+        debug ($result,$this->time(),$this->data_dir('log/get_ticker'));
+
         //---------------------------------------------------------------
 
         $this->buy_rate = $result['lowestAsk'];
@@ -658,7 +672,7 @@ echo
             $debug = true;
         }
 
-        //exit;
+        exit;
 
         return true;
 
