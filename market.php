@@ -19,6 +19,7 @@ class market
 
     public $maker_fee;
     public $taker_fee;
+
     public $client;
 
     public $first_trade_currency;
@@ -597,26 +598,29 @@ echo
         #################################################################
         # FEES
 
-        $result = $this->client->get_fee_info();
-        if (!is_array($result) || (is_array($result) && isset($result['error'])))
+        if ($this->maker_fee===null && $this->taker_fee===null)
         {
-            $this->log ('error', isset($result['error'])?$result['error']:'Error retrieving fees', \console\RED);
-            return false;
-        }
-        //debug ($result,$this->time(),$this->data_dir('log/get_fee_info'));
+            $result = $this->client->get_fee_info();
+            if (!is_array($result) || (is_array($result) && isset($result['error'])))
+            {
+                $this->log ('error', isset($result['error'])?$result['error']:'Error retrieving fees', \console\RED);
+                return false;
+            }
+            //debug ($result,$this->time(),$this->data_dir('log/get_fee_info'));
 
 
-        //---------------------------------------------------------------
+            //---------------------------------------------------------------
 
-        $this->maker_fee = $result['makerFee'];
-        $this->taker_fee = $result['takerFee'];
+            $this->maker_fee = $result['makerFee'];
+            $this->taker_fee = $result['takerFee'];
 
-        //---------------------------------------------------------------
+            //---------------------------------------------------------------
 
-        if (!$this->maker_fee || !$this->taker_fee)
-        {
-            $this->log ('skip','Error retrieving fees',\console\MAROON);
-            return false;
+            if (!$this->maker_fee || !$this->taker_fee)
+            {
+                $this->log ('skip','Error retrieving fees',\console\MAROON);
+                return false;
+            }
         }
 
         #################################################################
