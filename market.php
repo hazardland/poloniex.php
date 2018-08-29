@@ -565,7 +565,7 @@ echo
             $this->log ('error', isset($result['error'])?$result['error']:'Error retrieving balances', \console\RED);
             return false;
         }
-        debug ($result,$this->time(),$this->data_dir('log/get_balances'));
+        //debug ($result,$this->time(),$this->data_dir('log/get_balances'));
 
 
         //---------------------------------------------------------------
@@ -603,7 +603,7 @@ echo
             $this->log ('error', isset($result['error'])?$result['error']:'Error retrieving fees', \console\RED);
             return false;
         }
-        debug ($result,$this->time(),$this->data_dir('log/get_fee_info'));
+        //debug ($result,$this->time(),$this->data_dir('log/get_fee_info'));
 
 
         //---------------------------------------------------------------
@@ -627,7 +627,7 @@ echo
             $this->log ('error', isset($result['error'])?$result['error']:'Error retrieving rates', \console\RED);
             return false;
         }
-        debug ($result,$this->time(),$this->data_dir('log/get_ticker'));
+        //debug ($result,$this->time(),$this->data_dir('log/get_ticker'));
 
         //---------------------------------------------------------------
 
@@ -672,7 +672,7 @@ echo
             $debug = true;
         }
 
-        exit;
+        //exit;
 
         return true;
 
