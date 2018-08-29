@@ -100,7 +100,7 @@
 			);
 		}
 
-		public function get_open_orders($pair) {
+		public function get_open_orders($pair='all') {
 			return $this->query(
 				array(
 					'command' => 'returnOpenOrders',

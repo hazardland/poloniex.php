@@ -530,9 +530,19 @@ echo
 
         #################################################################
         # ORDERS
+        /*
+        [
+            0 => [
+                'id' =>
+                'type' => 'sell'/'buy',
+                'amount' => x.xxxx, //total order amount
+                'rate' => x.xxxx, //partial order amount
+            ]
+        ]
+        */
 
-        $result = $this->client->get_open_orders ($this->pair());
-        if (is_array($result) && isset($result['error']))
+        $result = $this->client->get_open_orders ();
+        if (!is_array($result) || (is_array($result) && isset($result['error'])))
         {
             $this->log ('error', isset($result['error'])?$result['error']:'Error retrieving orders', \console\RED);
             return false;
@@ -540,12 +550,12 @@ echo
 
         //---------------------------------------------------------------
 
-        if ($result)
+        if (isset($result[$this->pair()]) && count($result[$this->pair()]))
         {
             debug ($result,$this->time(),$this->data_dir('log/get_open_orders'));
             $this->locked = true;
             $orders = '';
-            foreach ($result as $order)
+            foreach ($result[$this->pair()] as $order)
             {
                 $orders .= ' '.$order['type'].' '.$order['startingAmount'].' '.$this->to_currency.' rate '.$order['rate'].' '.$this->to_currency;
             }
@@ -559,6 +569,12 @@ echo
 
         #################################################################
         # BALANCES
+        /*
+        [
+            'CUR1' => x.xxxxxxxx,
+            'CUR2' => x.xxxxxxxx,
+        ]
+        */
 
         $result = $this->client->get_balances();
         if (!is_array($result) || (is_array($result) && isset($result['error'])))
@@ -597,6 +613,12 @@ echo
 
         #################################################################
         # FEES
+        /*
+            [
+                'maker' =>
+                'taker' =>
+            ]
+        */
 
         if ($this->maker_fee===null && $this->taker_fee===null)
         {
@@ -625,6 +647,14 @@ echo
 
         #################################################################
         # RATES
+        /*
+            [
+                'bid' => x.xxxxxxxx, //buy price
+                'ask' => x.xxxxxxxx,  //sell price
+                'high' => x.xxxxxxx,  //high price
+                'low' => x.xxxxxxxx,  //low price
+            ]
+        */
         $result = $this->client->get_ticker ($this->pair());
         if (!is_array($result) || (is_array($result) && isset($result['error'])))
         {
