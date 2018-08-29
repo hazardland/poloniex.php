@@ -14,6 +14,7 @@ class market
     const DOWN = -1;
 
     public static $data_dir;
+    public static $pair_separator = '_';
 
     public $locked = false;
 
@@ -197,7 +198,7 @@ class market
     public function extract_pair ($pair)
     {
         $pair = trim ($pair);
-        $separator = strpos($pair,'_');
+        $separator = strpos($pair,self::$pair_separator);
         if ($separator===false)
         {
             return false;
@@ -228,7 +229,7 @@ class market
     }
     public function pair ()
     {
-        return $this->from_currency.'_'.$this->to_currency;
+        return $this->from_currency.self::$pair_separator.$this->to_currency;
     }
     public static function number ($amount, $decimals=8)
     {
