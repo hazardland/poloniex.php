@@ -603,7 +603,7 @@ echo
 
         if (!$this->maker_fee || !$this->taker_fee)
         {
-            $this->log ('skip','error retrieving fees');
+            $this->log ('skip','Error retrieving fees',\console\MAROON);
             return false;
         }
 
@@ -621,6 +621,12 @@ echo
         $this->sell_rate = $result['highestBid'];
         $this->high_rate = $result['high24hr'];
         $this->low_rate = $result['low24hr'];
+
+        if (!$this->buy_rate || !$this->sell_rate)
+        {
+            $this->log ('skip','Error retrieving fees',\console\MAROON);
+            return false;
+        }
 
         //---------------------------------------------------------------
 
