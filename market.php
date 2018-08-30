@@ -558,7 +558,7 @@ echo
             $orders = '';
             foreach ($result[$this->pair()] as $order)
             {
-                $orders .= ' '.$order['type'].' '.$order['startingAmount'].' '.$this->to_currency.' rate '.$order['rate'].' '.$this->to_currency;
+                $orders .= ' '.$order['type'].' '.$order['amount'].' '.$this->to_currency.' rate '.$order['rate'].' '.$this->from_currency;
             }
             $this->log ('skip','pending orders:'.$orders);
             return false;
