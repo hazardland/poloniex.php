@@ -245,13 +245,11 @@ class market
         //$this->sell_log(\console\PINK);
         if ($this->buy_amount()>=$this->to_min_trade && $this->buy_profitable())
         {
-            if ($this->buy_rate_trend!==self::DOWN)
-            $this->buy();
+            if ($this->buy_rate_trend!==self::DOWN) $this->buy();
         }
         else if ($this->sell_amount()>=$this->from_min_trade && $this->sell_profitable())
         {
-            if ($this->sell_rate_trend!==self::UP)
-            $this->sell();
+            if ($this->sell_rate_trend!==self::UP) $this->sell();
         }
         return true;
     }
@@ -599,19 +597,6 @@ echo
         $this->from_balance = $result[$this->from_currency];
         $this->to_balance = $result[$this->to_currency];
 
-        //---------------------------------------------------------------
-
-        if ($this->from_balance>0.0000001 && $this->to_balance_last==0)
-        {
-            $this->log ('error','You have not set how much '.$this->to_currency.' you have to buy in your first trade',\console\RED);
-            exit;
-        }
-        if ($this->to_balance>0.0000001 && $this->from_balance_last==0)
-        {
-            $this->log ('error','You have not for how much '.$this->from_currency.' you have to sell in your first trade',\console\RED);
-            exit;
-        }
-
         #################################################################
         # FEES
         /*
@@ -691,6 +676,17 @@ echo
         {
             file_put_contents($this->to_currency_file('first'), $this->to_balance);
             $this->to_balance_first = $this->to_balance;
+        }
+
+        if ($this->from_balance>0.0000001 && $this->to_balance_last==0 && $this->buy_amount()>=$this->to_min_trade)
+        {
+            $this->log ('error','You have not set how much '.$this->to_currency.' you have to buy in your first trade',\console\RED);
+            exit;
+        }
+        if ($this->to_balance>0.0000001 && $this->from_balance_last==0 && $this->sell_amount()>=$this->from_min_trade)
+        {
+            $this->log ('error','You have not for how much '.$this->from_currency.' you have to sell in your first trade',\console\RED);
+            exit;
         }
 
         #################################################################

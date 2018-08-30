@@ -14,5 +14,20 @@ class trader
     {
 
     }
+
+    public function get_fees ()
+    {
+
+    }
+
+    public function get_balances ()
+    {
+
+    }
+
+    public function get_rates ()
+    {
+
+    }
 }
 
