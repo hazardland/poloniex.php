@@ -279,7 +279,8 @@ echo
 " 1 ".$this->to_currency.' = '.$this->buy_rate." ".$this->from_currency." >> ".$this->buy_rate_next()." ".$this->from_currency."\n".
 " Rate needs to change by ", $color).\console\color(self::number($this->buy_rate_next()-$this->buy_rate),\console\RED).\console\color(" ".$this->from_currency."\n".
 " Balance ".$this->from_balance." ".$this->from_currency."\n".
-" Next min profit ".self::number($this->to_balance_last*$this->buy_win_percent)." ".$this->to_currency." ~".($this->buy_win_percent*100)."%\n".
+" Next min balance ".(self::number($this->to_balance_last*(1+$this->buy_win_percent))+0)." ".$this->to_currency."\n".
+" Next min profit ".(self::number($this->to_balance_last*$this->buy_win_percent)+0)." ".$this->to_currency." ~".($this->buy_win_percent*100)."%\n".
 " Total profited ".self::number($this->from_balance-$this->from_balance_first)." ".$this->from_currency,$color)."\n";
 
     echo \console\progress (
@@ -304,7 +305,8 @@ echo
 " 1 ".$this->to_currency.' = '.$this->sell_rate." ".$this->from_currency.' >> '.$this->sell_rate_next()." ".$this->from_currency."\n".
 " Rate needs to change by ", $color).\console\color(self::number($this->sell_rate_next()-$this->sell_rate),\console\RED).\console\color(" ".$this->from_currency."\n".
 " Balance ".$this->to_balance." ".$this->to_currency."\n".
-" Next min profit ".self::number($this->from_balance_last*$this->sell_win_percent)." ".$this->from_currency." ~".($this->sell_win_percent*100)."%\n".
+" Next min balance ".(self::number($this->from_balance_last*(1+$this->sell_win_percent))+0)." ".$this->from_currency."\n".
+" Next min profit ".(self::number($this->from_balance_last*$this->sell_win_percent)+0)." ".$this->from_currency." ~".($this->sell_win_percent*100)."%\n".
 " Total profited ".self::number($this->to_balance-$this->to_balance_first)." ".$this->to_currency,$color)."\n";
 
     echo \console\progress (
