@@ -6,13 +6,30 @@ class poloniex
 	protected $api_secret;
 	protected $trading_url = "https://poloniex.com/tradingApi";
 	protected $public_url = "https://poloniex.com/public";
+	public static $min = ['USDT'=>1, 'BTC'=>0.0001, 'ETH'=>0.0001, 'XMR'=>0.0001];
+	public static $max = [];
 
 	public function __construct ($api_key, $api_secret)
 	{
 		$this->api_key = $api_key;
 		$this->api_secret = $api_secret;
 	}
-
+	public function min ($currency)
+	{
+		if (isset(self::$min[$currency]))
+		{
+			return self::$min[$currency];
+		}
+		return false;
+	}
+	public function max ($currency)
+	{
+		if (isset(self::$max[$currency]))
+		{
+			return self::$max[$currency];
+		}
+		return false;
+	}
 	private function query (array $request = array())
 	{
 		// API settings
