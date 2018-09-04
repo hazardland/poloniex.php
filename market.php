@@ -195,22 +195,6 @@ class market
 
         $this->client = new poloniex ($params['poloniex-key'], $params['poloniex-secret']);
     }
-    public function extract_pair ($pair)
-    {
-        $pair = trim ($pair);
-        $separator = strpos($pair,self::$pair_separator);
-        if ($separator===false)
-        {
-            return false;
-        }
-        $from = trim(substr($pair, 0, $separator));
-        $to = trim(substr($pair, $separator+1));
-        if (trim($from)=='' || trim($to)=='' || strlen($from)<3 || strlen($to)<3)
-        {
-            return false;
-        }
-        return [$from,$to];
-    }
     public function data_dir ($path='')
     {
         if ($path)
@@ -227,9 +211,29 @@ class market
     {
         return $this->data_dir(strtolower($this->to_currency).'.'.$type);
     }
+    public function extract_pair ($pair)
+    {
+        $pair = trim ($pair);
+        $separator = strpos($pair,self::$pair_separator);
+        if ($separator===false)
+        {
+            return false;
+        }
+        $from = trim(substr($pair, 0, $separator));
+        $to = trim(substr($pair, $separator+1));
+        if (trim($from)=='' || trim($to)=='' || strlen($from)<3 || strlen($to)<3)
+        {
+            return false;
+        }
+        return [$from,$to];
+    }
     public function pair ()
     {
         return $this->from_currency.self::$pair_separator.$this->to_currency;
+    }
+    public function time ()
+    {
+        return @date("Y-m-d H:i:s");
     }
     public static function number ($amount, $decimals=8)
     {
@@ -253,6 +257,7 @@ class market
         }
         return true;
     }
+
     public function buy_amount ()
     {
         return self::number($this->from_balance/$this->buy_rate);
@@ -261,14 +266,44 @@ class market
     {
         return self::number($this->buy_amount()*(1-$this->taker_fee));
     }
-    public function time ()
-    {
-        return @date("Y-m-d H:i:s");
-    }
     public function buy_rate_next ()
     {
         return self::number($this->from_balance/($this->to_balance_last*(1+$this->buy_win_percent+$this->taker_fee)));
     }
+    public function buy_profitable ()
+    {
+        if ($this->buy_amount_after()>=($this->to_balance_last*(1+$this->buy_win_percent)))
+        {
+            $this->buy_log (\console\GREEN);
+            return true;
+        }
+        $this->buy_log (\console\BLUE);
+        return false;
+    }
+
+    public function sell_amount ()
+    {
+        return self::number($this->to_balance*$this->sell_rate);
+    }
+    public function sell_amount_after ()
+    {
+        return self::number($this->sell_amount()*(1-$this->taker_fee));
+    }
+    public function sell_rate_next ()
+    {
+        return self::number (($this->from_balance_last*(1+$this->sell_win_percent+$this->taker_fee))/$this->to_balance);
+    }
+    public function sell_profitable()
+    {
+        if ($this->sell_amount_after()>=($this->from_balance_last*(1+$this->sell_win_percent)))
+        {
+            $this->sell_log (\console\GREEN);
+            return true;
+        }
+        $this->sell_log (\console\PINK);
+        return false;
+    }
+
     //BUY XRP
     public function buy_log ($color)
     {
@@ -290,10 +325,6 @@ echo
             $this->high_rate
         )."\n";
 
-    }
-    public function sell_rate_next ()
-    {
-        return self::number (($this->from_balance_last*(1+$this->sell_win_percent+$this->taker_fee))/$this->to_balance);
     }
     //SELL XRP
     public function sell_log ($color)
@@ -317,35 +348,8 @@ echo
         )."\n";
 
     }
-    public function buy_profitable()
-    {
-        if ($this->buy_amount_after()>=($this->to_balance_last*(1+$this->buy_win_percent)))
-        {
-            $this->buy_log (\console\GREEN);
-            return true;
-        }
-        $this->buy_log (\console\BLUE);
-        return false;
-    }
-    public function sell_profitable()
-    {
-        if ($this->sell_amount_after()>=($this->from_balance_last*(1+$this->sell_win_percent)))
-        {
-            $this->sell_log (\console\GREEN);
-            return true;
-        }
-        $this->sell_log (\console\PINK);
-        return false;
-    }
 
-    public function sell_amount ()
-    {
-        return self::number($this->to_balance*$this->sell_rate);
-    }
-    public function sell_amount_after ()
-    {
-        return self::number($this->sell_amount()*(1-$this->taker_fee));
-    }
+
     public function buy_log_file ()
     {
         file_put_contents($this->data_dir('trade.log'),
@@ -542,7 +546,7 @@ echo
         ]
         */
 
-        $result = $this->client->get_open_orders ();
+        $result = $this->client->get_orders ();
         if (!is_array($result) || (is_array($result) && isset($result['error'])))
         {
             $this->log ('error', isset($result['error'])?$result['error']:'Error retrieving orders', \console\RED);
@@ -551,7 +555,7 @@ echo
 
         //---------------------------------------------------------------
 
-        if (isset($result[$this->pair()]) && count($result[$this->pair()]))
+        if (false && isset($result[$this->pair()]) && count($result[$this->pair()]))
         {
             debug ($result,$this->time(),$this->data_dir('log/get_open_orders'));
             $this->locked = true;
@@ -610,7 +614,7 @@ echo
 
         if ($this->maker_fee===null && $this->taker_fee===null)
         {
-            $result = $this->client->get_fee_info();
+            $result = $this->client->get_fees();
             if (!is_array($result) || (is_array($result) && isset($result['error'])))
             {
                 $this->log ('error', isset($result['error'])?$result['error']:'Error retrieving fees', \console\RED);
@@ -621,8 +625,8 @@ echo
 
             //---------------------------------------------------------------
 
-            $this->maker_fee = $result['makerFee'];
-            $this->taker_fee = $result['takerFee'];
+            $this->maker_fee = $result['maker'];
+            $this->taker_fee = $result['taker'];
 
             //---------------------------------------------------------------
 
@@ -643,8 +647,8 @@ echo
                 'low' => x.xxxxxxxx,  //low price
             ]
         */
-        $result = $this->client->get_ticker ($this->pair());
-        if (!is_array($result) || (is_array($result) && isset($result['error'])))
+        $result = $this->client->get_rates ();
+        if (!is_array($result) || (is_array($result) && isset($result['error'])) || !isset($result[$this->pair()]))
         {
             $this->log ('error', isset($result['error'])?$result['error']:'Error retrieving rates', \console\RED);
             return false;
@@ -653,10 +657,10 @@ echo
 
         //---------------------------------------------------------------
 
-        $this->buy_rate = $result['lowestAsk'];
-        $this->sell_rate = $result['highestBid'];
-        $this->high_rate = $result['high24hr'];
-        $this->low_rate = $result['low24hr'];
+        $this->buy_rate = $result[$this->pair()]['buy'];
+        $this->sell_rate = $result[$this->pair()]['sell'];
+        $this->high_rate = $result[$this->pair()]['high'];
+        $this->low_rate = $result[$this->pair()]['low'];
 
         if (!$this->buy_rate || !$this->sell_rate)
         {
@@ -705,7 +709,7 @@ echo
             $debug = true;
         }
 
-        //exit;
+        exit;
 
         return true;
 

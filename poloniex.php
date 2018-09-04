@@ -1,242 +1,225 @@
 <?php
-	// FINAL TESTED CODE - Created by Compcentral
 
-	// NOTE: currency pairs are reverse of what most exchanges use...
-	//       For instance, instead of XPM_BTC, use BTC_XPM
+class poloniex
+{
+	protected $api_key;
+	protected $api_secret;
+	protected $trading_url = "https://poloniex.com/tradingApi";
+	protected $public_url = "https://poloniex.com/public";
 
-	class poloniex
+	public function __construct ($api_key, $api_secret)
 	{
-		protected $api_key;
-		protected $api_secret;
-		protected $trading_url = "https://poloniex.com/tradingApi";
-		protected $public_url = "https://poloniex.com/public";
+		$this->api_key = $api_key;
+		$this->api_secret = $api_secret;
+	}
 
-		public function __construct($api_key, $api_secret)
+	private function query (array $request = array())
+	{
+		// API settings
+		$key = $this->api_key;
+		$secret = $this->api_secret;
+
+		debug ($request);
+
+		// generate a nonce to avoid problems with 32bit systems
+		$microtime = explode(' ', microtime());
+		$request['nonce'] = $microtime[1].substr($microtime[0], 2, 6);
+
+		// generate the POST data string
+		$post_data = http_build_query ($request, '', '&');
+		$sign = hash_hmac ('sha512', $post_data, $secret);
+
+		// generate the extra headers
+		$headers = array
+		(
+			'Key: '.$key,
+			'Sign: '.$sign,
+		);
+
+		// curl handle (initialize if required)
+		static $handle = null;
+		if (is_null($handle))
 		{
-			$this->api_key = $api_key;
-			$this->api_secret = $api_secret;
+			$handle = curl_init();
+			curl_setopt($handle, CURLOPT_RETURNTRANSFER, true);
+			curl_setopt($handle, CURLOPT_USERAGENT,
+				'Mozilla/4.0 (compatible; Poloniex PHP bot; '.php_uname('a').'; PHP/'.phpversion().')'
+			);
 		}
+		curl_setopt($handle, CURLOPT_URL, $this->trading_url);
+		curl_setopt($handle, CURLOPT_POSTFIELDS, $post_data);
+		curl_setopt($handle, CURLOPT_HTTPHEADER, $headers);
+		curl_setopt($handle, CURLOPT_SSL_VERIFYPEER, FALSE);
 
-		private function query (array $req = array())
+		// run the query
+		try
 		{
-			// API settings
-			$key = $this->api_key;
-			$secret = $this->api_secret;
-
-			// generate a nonce to avoid problems with 32bit systems
-			$mt = explode(' ', microtime());
-			$req['nonce'] = $mt[1].substr($mt[0], 2, 6);
-
-			// generate the POST data string
-			$post_data = http_build_query ($req, '', '&');
-			$sign = hash_hmac ('sha512', $post_data, $secret);
-
-			// generate the extra headers
-			$headers = array(
-				'Key: '.$key,
-				'Sign: '.$sign,
-			);
-
-			// curl handle (initialize if required)
-			static $ch = null;
-			if (is_null($ch)) {
-				$ch = curl_init();
-				curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-				curl_setopt($ch, CURLOPT_USERAGENT,
-					'Mozilla/4.0 (compatible; Poloniex PHP bot; '.php_uname('a').'; PHP/'.phpversion().')'
-				);
-			}
-			curl_setopt($ch, CURLOPT_URL, $this->trading_url);
-			curl_setopt($ch, CURLOPT_POSTFIELDS, $post_data);
-			curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
-			curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, FALSE);
-
-			// run the query
-			try
-			{
-				$res = curl_exec($ch);
-			}
-			catch (\Exception $e)
-			{
-				echo "[ERROR] ".@date("H:i:s")." ".$e->getMessage()."\n";
-				return false;
-			}
-
-			//if ($res === false) throw new Exception('Curl error: '.curl_error($ch));
-			if ($res === false)
-			{
-				echo "[ERROR] ".@date("H:i:s")." ".curl_error($ch)."\n";
-				return false;
-			 	//throw new Exception('Curl error: '.curl_error($ch));
-			}
-			//echo $res;
-			$dec = json_decode($res, true);
-			if (!$dec){
-				//throw new Exception('Invalid data: '.$res);
-				return false;
-			}else{
-				return $dec;
-			}
+			$result = curl_exec($handle);
 		}
-
-		protected function retrieveJSON($URL) {
-			$opts = array('http' =>
-				array(
-					'method'  => 'GET',
-					'timeout' => 10
-				)
-			);
-			$context = stream_context_create($opts);
-			$feed = file_get_contents($URL, false, $context);
-			$json = json_decode($feed, true);
-			return $json;
-		}
-
-		public function get_balances() {
-			return $this->query(
-				array(
-					'command' => 'returnBalances'
-				)
-			);
-		}
-
-		public function get_open_orders($pair='all') {
-			return $this->query(
-				array(
-					'command' => 'returnOpenOrders',
-					'currencyPair' => strtoupper($pair)
-				)
-			);
-		}
-
-		public function get_my_trade_history($pair) {
-			return $this->query(
-				array(
-					'command' => 'returnTradeHistory',
-					'currencyPair' => strtoupper($pair)
-				)
-			);
-		}
-
-		public function get_fee_info ()
+		catch (\Exception $e)
 		{
-			return $this->query(
-				array(
-					'command' => 'returnFeeInfo'
-				)
-			);
+			echo "[ERROR] ".@date("H:i:s")." ".$e->getMessage()."\n";
+			return false;
 		}
 
-		public function buy($pair, $rate, $amount) {
-			return $this->query(
-				array(
-					'command' => 'buy',
-					'currencyPair' => strtoupper($pair),
-					'rate' => $rate,
-					'amount' => $amount
-				)
-			);
+		//if ($result === false) throw new Exception('Curl error: '.curl_error($handle));
+		if ($result === false)
+		{
+			echo "[ERROR] ".@date("H:i:s")." ".curl_error($handle)."\n";
+			return false;
+		 	//throw new Exception('Curl error: '.curl_error($handle));
 		}
-
-		public function sell($pair, $rate, $amount) {
-			return $this->query(
-				array(
-					'command' => 'sell',
-					'currencyPair' => strtoupper($pair),
-					'rate' => $rate,
-					'amount' => $amount
-				)
-			);
+		//echo $result;
+		$decoded = json_decode($result, true);
+		if (!$decoded)
+		{
+			//throw new Exception('Invalid data: '.$result);
+			return false;
 		}
-
-		public function cancel_order($pair, $order_number) {
-			return $this->query(
-				array(
-					'command' => 'cancelOrder',
-					'currencyPair' => strtoupper($pair),
-					'orderNumber' => $order_number
-				)
-			);
-		}
-
-		public function withdraw($currency, $amount, $address) {
-			return $this->query(
-				array(
-					'command' => 'withdraw',
-					'currency' => strtoupper($currency),
-					'amount' => $amount,
-					'address' => $address
-				)
-			);
-		}
-
-		public function get_trade_history($pair) {
-			$trades = $this->retrieveJSON($this->public_url.'?command=returnTradeHistory&currencyPair='.strtoupper($pair));
-			return $trades;
-		}
-
-		public function get_order_book($pair) {
-			$orders = $this->retrieveJSON($this->public_url.'?command=returnOrderBook&currencyPair='.strtoupper($pair));
-			return $orders;
-		}
-
-		public function get_volume() {
-			$volume = $this->retrieveJSON($this->public_url.'?command=return24hVolume');
-			return $volume;
-		}
-
-		public function get_ticker($pair = "ALL") {
-			$pair = strtoupper($pair);
-			$prices = $this->retrieveJSON($this->public_url.'?command=returnTicker');
-			if($pair == "ALL"){
-				return $prices;
-			}else{
-				$pair = strtoupper($pair);
-				if(isset($prices[$pair])){
-					return $prices[$pair];
-				}else{
-					return array();
-				}
-			}
-		}
-
-		public function get_trading_pairs() {
-			$tickers = $this->retrieveJSON($this->public_url.'?command=returnTicker');
-			return array_keys($tickers);
-		}
-
-		public function get_total_btc_balance() {
-			$balances = $this->get_balances();
-			$prices = $this->get_ticker();
-
-			$tot_btc = 0;
-
-			foreach($balances as $coin => $amount){
-				$pair = "BTC_".strtoupper($coin);
-
-				// convert coin balances to btc value
-				if($amount > 0){
-					if($coin != "BTC"){
-						$tot_btc += $amount * $prices[$pair];
-					}else{
-						$tot_btc += $amount;
-					}
-				}
-
-				// process open orders as well
-				if($coin != "BTC"){
-					$open_orders = $this->get_open_orders($pair);
-					foreach($open_orders as $order){
-						if($order['type'] == 'buy'){
-							$tot_btc += $order['total'];
-						}elseif($order['type'] == 'sell'){
-							$tot_btc += $order['amount'] * $prices[$pair];
-						}
-					}
-				}
-			}
-
-			return $tot_btc;
+		else
+		{
+			return $decoded;
 		}
 	}
-?>
+
+	protected function retrieve_json ($url)
+	{
+		$request = array
+		('http' =>
+			array
+			(
+				'method'  => 'GET',
+				'timeout' => 10
+			)
+		);
+		$context = stream_context_create($request);
+		$feed = file_get_contents($url, false, $context);
+		$json = json_decode($feed, true);
+		return $json;
+	}
+
+	public function get_balances()
+	{
+		return $this->query
+		(
+			array
+			(
+				'command' => 'returnBalances'
+			)
+		);
+	}
+
+	public function get_fees ()
+	{
+		$result = $this->query
+		(
+			array
+			(
+				'command' => 'returnFeeInfo'
+			)
+		);
+		if (is_array($result) && !isset($result['error']))
+		{
+			$result['maker'] = &$result['makerFee'];
+			$result['taker'] = &$result['takerFee'];
+		}
+		//debug ($result);
+		return $result;
+	}
+
+	public function get_rates ()
+	{
+		$result = $this->retrieve_json($this->public_url.'?command=returnTicker');
+		if (is_array($result) && !isset($result['error']))
+		{
+			foreach ($result as $key => $value)
+			{
+				$result[$key]['buy'] = &$result[$key]['highestBid'];
+				$result[$key]['sell'] = &$result[$key]['lowestAsk'];
+				$result[$key]['high'] = &$result[$key]['high24hr'];
+				$result[$key]['low'] = &$result[$key]['low24hr'];
+			}
+		}
+		//debug ($result);
+		return $result;
+	}
+
+	public function get_trades ($id)
+	{
+		return $this->query
+		(
+			array
+			(
+				'command' => 'returnOrderTrades',
+				'orderNumber' => $id
+			)
+		);
+	}
+
+	public function get_orders ()
+	{
+		$result = $this->query
+		(
+			array
+			(
+				'command' => 'returnOpenOrders',
+				'currencyPair' => 'ALL'
+			)
+		);
+		if (is_array($result) && !isset($result['error']))
+		{
+			foreach ($result as $pair => $orders)
+			{
+				foreach ($orders as $key => $value)
+				{
+					$result[$pair][$key]['id'] = &$result[$pair][$key]['orderNumber'];
+				}
+			}
+		}
+		//debug ($result);
+		return $result;
+	}
+
+	public function buy ($pair, $rate, $amount)
+	{
+		$result = $this->query
+		(
+			array
+			(
+				'command' => 'buy',
+				'currencyPair' => strtoupper($pair),
+				'rate' => $rate,
+				'amount' => $amount
+			)
+		);
+		if (is_array($result) && !isset($result['error']))
+		{
+			$result['id'] = &$result['orderNumber'];
+			$result['trades'] = &$result['resultingTrades'];
+		}
+		debug ($result);
+		return $result;
+	}
+
+	public function sell ($pair, $rate, $amount)
+	{
+		$result = $this->query
+		(
+			array
+			(
+				'command' => 'sell',
+				'currencyPair' => strtoupper($pair),
+				'rate' => $rate,
+				'amount' => $amount
+			)
+		);
+		if (is_array($result) && !isset($result['error']))
+		{
+			$result['id'] = &$result['orderNumber'];
+			$result['trades'] = &$result['resultingTrades'];
+		}
+		debug ($result);
+		return $result;
+	}
+
+}
