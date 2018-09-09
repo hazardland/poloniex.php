@@ -151,8 +151,8 @@ class poloniex
 		{
 			foreach ($result as $key => $value)
 			{
-				$result[$key]['buy'] = &$result[$key]['highestBid'];
-				$result[$key]['sell'] = &$result[$key]['lowestAsk'];
+				$result[$key]['buy'] = &$result[$key]['lowestAsk'];
+				$result[$key]['sell'] = &$result[$key]['highestBid'];
 				$result[$key]['high'] = &$result[$key]['high24hr'];
 				$result[$key]['low'] = &$result[$key]['low24hr'];
 			}
@@ -161,16 +161,31 @@ class poloniex
 		return $result;
 	}
 
-	public function get_trades ($id)
+	public function get_trades ($id=null)
 	{
-		return $this->query
-		(
-			array
+		if ($id!==null)
+		{
+			return $this->query
 			(
-				'command' => 'returnOrderTrades',
-				'orderNumber' => $id
-			)
-		);
+				array
+				(
+					'command' => 'returnOrderTrades',
+					'orderNumber' => $id
+				)
+			);
+		}
+		else
+		{
+			return $this->query
+			(
+				array
+				(
+					'command' => 'returnTradeHistory',
+					'currencyPair' => 'ALL',
+					'start' => 0
+				)
+			);
+		}
 	}
 
 	public function get_orders ()
@@ -185,11 +200,18 @@ class poloniex
 		);
 		if (is_array($result) && !isset($result['error']))
 		{
-			foreach ($result as $pair => $orders)
+			$source = $result;
+			$result = [];
+			foreach ($source as $pair => $orders)
 			{
+				if (!isset($result[$pair]))
+				{
+					$result[$pair] = [];
+				}
 				foreach ($orders as $key => $value)
 				{
-					$result[$pair][$key]['id'] = &$result[$pair][$key]['orderNumber'];
+					//$result[$pair][$key]['id'] = &$result[$pair][$key]['orderNumber'];
+					$result[$pair][$value['orderNumber']][] = $value;
 				}
 			}
 		}
